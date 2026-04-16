@@ -17,7 +17,7 @@
 
 ### 方法一：下載 DMG（推薦）
 
-[點擊下載最新版本](https://github.com/anthropic-cube/claude-island-modify/releases/latest)
+[點擊下載最新版本](https://github.com/sherry30219-byte/claude-island-modify/releases/latest)
 
 1. 下載 `.dmg` 檔案
 2. 打開 DMG，將 **Claude Island** 拖到 **Applications** 資料夾
@@ -27,7 +27,7 @@
 ### 方法二：從原始碼建置
 
 ```bash
-git clone https://github.com/anthropic-cube/claude-island-modify.git
+git clone https://github.com/sherry30219-byte/claude-island-modify.git
 cd claude-island-modify
 ```
 
