@@ -15,34 +15,26 @@
 
 ## 安裝
 
-### 步驟一：下載專案
+### 方法一：下載 DMG（推薦）
+
+[點擊下載最新版本](https://github.com/anthropic-cube/claude-island-modify/releases/latest)
+
+1. 下載 `.dmg` 檔案
+2. 打開 DMG，將 **Claude Island** 拖到 **Applications** 資料夾
+3. 首次打開時 macOS 會阻擋，請**右鍵 → 打開**，或到 **系統設定 → 隱私權與安全性** 點擊「仍要打開」
+4. 開啟**輔助使用權限**：系統設定 → 隱私權與安全性 → 輔助使用 → 加入 Claude Island 並開啟
+
+### 方法二：從原始碼建置
 
 ```bash
-git clone https://github.com/你的帳號/claude-island-modify.git
+git clone https://github.com/anthropic-cube/claude-island-modify.git
 cd claude-island-modify
 ```
 
-### 步驟二：用 Xcode 開啟並設定簽名
-
 1. 雙擊 `ClaudeIsland.xcodeproj` 開啟 Xcode
-2. 左側選擇 **ClaudeIsland** target
-3. 進入 **Signing & Capabilities** 頁籤
-4. 將 **Team** 改為你自己的 Apple ID（沒有的話點 "Add an Account..." 登入）
-5. 將 **Bundle Identifier** 改為獨特的值，例如 `com.你的名字.ClaudeIsland`
-
-### 步驟三：建置並執行
-
-按 `⌘R` 即可建置並啟動應用程式。
-
-### 步驟四：開啟輔助使用權限
-
-首次啟動後，需要授予輔助使用（Accessibility）權限才能使用視窗切換功能：
-
-1. 打開 **系統設定 → 隱私權與安全性 → 輔助使用**
-2. 點擊 `+` 按鈕，加入剛建置的 Claude Island 應用程式
-3. 確認開關為開啟狀態
-
-> 也可以在靈動島設定選單中點擊 **Accessibility → Enable** 快速跳轉到設定頁面。
+2. **Signing & Capabilities** → 將 **Team** 改為你的 Apple ID，**Bundle Identifier** 改為獨特值
+3. 按 `⌘R` 建置並執行
+4. 開啟輔助使用權限（同上方法一步驟 4）
 
 ## 運作方式
 
