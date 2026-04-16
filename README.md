@@ -28,12 +28,15 @@
 
 1. 下載 `.dmg` 檔案
 2. 打開 DMG，將 **Claude Island** 拖到 **Applications** 資料夾
-3. **‼首次打開會被 macOS 阻擋**（因為此版本沒有 Apple Developer 簽名，加入 Apple Developer Program 一年要 $99 USD，所以沒有簽），請依照以下方式解除：
-   - **方式 A**：打開終端機，輸入以下指令後即可正常打開：
+3. 再去雙擊 App 打開 Claude Island，此時**首次打開會出現警告 ⚠️，先不要丟垃圾桶！**
+   因為此版本沒有 Apple Developer 簽名，加入 Apple Developer Program 一年要 $99 USD
+4. 請依照以下方式解除：
+   - 方式 A：到 **系統設定 → 隱私權與安全性**，往下滑找到「已阻擋 Claude Island」，點擊 **強制打開**
+   
+   - 方式 B：打開終端機，輸入以下指令後即可正常打開：
      ```bash
      xattr -cr /Applications/Claude\ Island.app
      ```
-   - **方式 B**：到 **系統設定 → 隱私權與安全性**，往下滑找到「已阻擋 Claude Island」，點擊 **仍要打開**
 4. 開啟**輔助使用權限**（視窗切換功能需要）：系統設定 → 隱私權與安全性 → 輔助使用 → 加入 Claude Island 並開啟
 
 ### 方法二：從原始碼建置
@@ -58,7 +61,10 @@ Claude Island 會在 `~/.claude/hooks/` 安裝 hooks，透過 Unix socket 傳遞
 
 此 Fork 版本包含以下優化：
 
-- **點擊切換視窗（智慧視窗匹配）** — 單擊 session 即可精準跳到對應的 VS Code / Cursor / 終端機視窗。即使同時開啟多個編輯器視窗，也能透過 AppleScript + System Events 比對視窗標題，正確切換到該專案的視窗。不需要 yabai。切換後靈動島自動收合。⚠️ **已知問題**：此功能在 macOS 15.6 上可能失效，疑似與 `NSRunningApplication.activate` 棄用及 Automation 權限變更有關，尚未完全修復。
+- **點擊切換視窗（智慧視窗匹配）** — 單擊 session 即可精準跳到對應的 VS Code / Cursor / 終端機視窗。即使同時開啟多個編輯器視窗，也能透過 AppleScript + System Events 比對視窗標題，正確切換到該專案的視窗。不需要 yabai。切換後靈動島自動收合。
+```bash
+  ⚠️ **已知問題**：此功能在 macOS 15.6 上可能失效，疑似與 `NSRunningApplication.activate` 棄用及 Automation 權限變更有關，尚未完全修復。
+```
 - **Hover 即展開** — 滑鼠移到靈動島立即展開，移除原本 1 秒的延遲。滑鼠離開後自動收合。
 - **常駐顯示** — 靈動島始終可見，並顯示目前 session 數量。展開後右上角有最小化按鈕可手動隱藏。
 - **動態面板高度** — 面板高度依據 session 數量自動調整，不再固定高度。
