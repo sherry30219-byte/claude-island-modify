@@ -58,7 +58,7 @@ Claude Island 會在 `~/.claude/hooks/` 安裝 hooks，透過 Unix socket 傳遞
 
 此 Fork 版本包含以下優化：
 
-- **點擊切換視窗（智慧視窗匹配）** — 單擊 session 即可精準跳到對應的 VS Code / Cursor / 終端機視窗。即使同時開啟多個編輯器視窗，也能透過 AppleScript + System Events 比對視窗標題，正確切換到該專案的視窗。不需要 yabai。切換後靈動島自動收合。
+- **點擊切換視窗（智慧視窗匹配）** — 單擊 session 即可精準跳到對應的 VS Code / Cursor / 終端機視窗。即使同時開啟多個編輯器視窗，也能透過 AppleScript + System Events 比對視窗標題，正確切換到該專案的視窗。不需要 yabai。切換後靈動島自動收合。⚠️ **已知問題**：此功能在 macOS 15.6 上可能失效，疑似與 `NSRunningApplication.activate` 棄用及 Automation 權限變更有關，尚未完全修復。
 - **Hover 即展開** — 滑鼠移到靈動島立即展開，移除原本 1 秒的延遲。滑鼠離開後自動收合。
 - **常駐顯示** — 靈動島始終可見，並顯示目前 session 數量。展開後右上角有最小化按鈕可手動隱藏。
 - **動態面板高度** — 面板高度依據 session 數量自動調整，不再固定高度。

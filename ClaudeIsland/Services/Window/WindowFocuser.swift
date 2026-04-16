@@ -102,14 +102,15 @@ actor WindowFocuser {
         let raised = raiseWindow(forApp: app, projectName: projectName, cwd: cwd)
         if raised {
             print("[WindowFocuser] Strategy B succeeded")
-            app.activate(options: .activateIgnoringOtherApps)
+            activateApp(app)
             return true
         }
         print("[WindowFocuser] Strategy B failed")
 
         // Strategy C: Just activate the app
         print("[WindowFocuser] Falling back to Strategy C (activate app)")
-        return app.activate(options: .activateIgnoringOtherApps)
+        activateApp(app)
+        return true
     }
 
     /// Focus the terminal for a session by working directory (fallback when no PID)
@@ -125,6 +126,26 @@ actor WindowFocuser {
         }
 
         return false
+    }
+
+    // MARK: - App Activation
+
+    /// Activate an app reliably on macOS 14+.
+    /// Uses NSWorkspace.openApplication which works even from a non-activating panel.
+    private func activateApp(_ app: NSRunningApplication) {
+        guard let bundleURL = app.bundleURL else {
+            app.activate()
+            return
+        }
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = true
+        config.createsNewApplicationInstance = false
+        NSWorkspace.shared.openApplication(at: bundleURL, configuration: config) { _, error in
+            if let error = error {
+                print("[WindowFocuser] NSWorkspace.openApplication failed: \(error), falling back to activate()")
+                app.activate()
+            }
+        }
     }
 
     // MARK: - AppleScript Window Raising
