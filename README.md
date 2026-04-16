@@ -1,7 +1,7 @@
 <div align="center">
   <img src="img/128.png" alt="Claude Island" width="128" height="128">
   <h3>Claude Island（調整版）</h3>
-  <p>這是基於 <a href="https://github.com/farouqaldori/claude-island">claude-island</a> 進行的調整版本，詳細修改項目可以查看下方 Fork。</p>
+  <p>這是基於 <a href="https://github.com/farouqaldori/claude-island">claude-island</a> 進行的調整版本，詳細修改項目以及安裝方法可以查看下方 Fork。</p>
   <a href="https://github.com/sherry30219-byte/claude-island-modify/releases/latest">
     <img src="https://img.shields.io/badge/下載-DMG-blue?style=for-the-badge" alt="下載 DMG" />
   </a>
@@ -28,7 +28,7 @@
 
 1. 下載 `.dmg` 檔案
 2. 打開 DMG，將 **Claude Island** 拖到 **Applications** 資料夾
-3. **首次打開會被 macOS 阻擋**（因為此版本沒有 Apple Developer 簽名，加入 Apple Developer Program 一年要 $99 USD，所以沒有簽），請依照以下方式解除：
+3. **‼首次打開會被 macOS 阻擋**（因為此版本沒有 Apple Developer 簽名，加入 Apple Developer Program 一年要 $99 USD，所以沒有簽），請依照以下方式解除：
    - **方式 A**：打開終端機，輸入以下指令後即可正常打開：
      ```bash
      xattr -cr /Applications/Claude\ Island.app

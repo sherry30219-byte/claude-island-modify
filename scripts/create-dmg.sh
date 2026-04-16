@@ -52,9 +52,6 @@ mkdir -p "$DMG_DIR"
 # 複製 .app
 cp -R "$APP_PATH" "$DMG_DIR/$APP_NAME.app"
 
-# 建立 Applications 捷徑
-ln -s /Applications "$DMG_DIR/Applications"
-
 # 產生 DMG
 DMG_PATH="$BUILD_DIR/$APP_NAME-v$VERSION.dmg"
 rm -f "$DMG_PATH"
@@ -65,6 +62,7 @@ echo "正在產生 DMG..."
 if command -v create-dmg &> /dev/null; then
     create-dmg \
         --volname "$APP_NAME" \
+        --background "$PROJECT_DIR/img/DMG_BG.jpg" \
         --window-size 600 400 \
         --icon-size 120 \
         --icon "$APP_NAME.app" 150 200 \
@@ -78,6 +76,9 @@ else
         -ov -format UDZO \
         "$DMG_PATH"
 fi
+
+# 清理暫存資料夾
+rm -rf "$DMG_DIR"
 
 echo ""
 echo "=== 完成 ==="

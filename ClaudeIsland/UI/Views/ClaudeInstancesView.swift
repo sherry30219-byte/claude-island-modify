@@ -90,6 +90,7 @@ struct ClaudeInstancesView: View {
     private func focusSession(_ session: SessionState) {
         Task {
             var focused = false
+            print("[focusSession] Starting: pid=\(session.pid ?? -1), projectName=\(session.projectName ?? "nil"), cwd=\(session.cwd), isInTmux=\(session.isInTmux)")
 
             // Try yabai first if available and in tmux
             if session.isInTmux, await WindowFinder.shared.isYabaiAvailable() {

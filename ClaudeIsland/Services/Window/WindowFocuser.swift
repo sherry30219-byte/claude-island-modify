@@ -75,26 +75,40 @@ actor WindowFocuser {
             targetApp = NSRunningApplication(processIdentifier: pid_t(terminalPid))
         }
 
-        guard let app = targetApp else { return false }
+        guard let app = targetApp else {
+            print("[WindowFocuser] No target app found for claudePid: \(claudePid)")
+            return false
+        }
 
         // Build search terms
         let folderName = cwd.flatMap { URL(fileURLWithPath: $0).lastPathComponent }
         let searchTerms = [projectName, folderName].compactMap { $0?.lowercased() }
 
+        print("[WindowFocuser] Focusing: app=\(app.localizedName ?? "?"), pid=\(claudePid), searchTerms=\(searchTerms), projectName=\(projectName ?? "nil"), cwd=\(cwd ?? "nil")")
+
         // Strategy A: Use AppleScript via System Events to raise the specific window
         if !searchTerms.isEmpty, let appName = app.localizedName {
+            print("[WindowFocuser] Trying Strategy A (AppleScript)...")
             let raised = await raiseWindowViaAppleScript(appName: appName, searchTerms: searchTerms)
-            if raised { return true }
+            if raised {
+                print("[WindowFocuser] Strategy A succeeded")
+                return true
+            }
+            print("[WindowFocuser] Strategy A failed")
         }
 
         // Strategy B: Use AX API as fallback
+        print("[WindowFocuser] Trying Strategy B (AX API)...")
         let raised = raiseWindow(forApp: app, projectName: projectName, cwd: cwd)
         if raised {
+            print("[WindowFocuser] Strategy B succeeded")
             app.activate(options: .activateIgnoringOtherApps)
             return true
         }
+        print("[WindowFocuser] Strategy B failed")
 
         // Strategy C: Just activate the app
+        print("[WindowFocuser] Falling back to Strategy C (activate app)")
         return app.activate(options: .activateIgnoringOtherApps)
     }
 
@@ -144,7 +158,11 @@ actor WindowFocuser {
                 let appleScript = NSAppleScript(source: script)
                 var error: NSDictionary?
                 let result = appleScript?.executeAndReturnError(&error)
+                if let error = error {
+                    print("[WindowFocuser] AppleScript error: \(error)")
+                }
                 let success = result?.booleanValue ?? false
+                print("[WindowFocuser] AppleScript result: \(success), appName: \(appName), searchTerms: \(searchTerms)")
                 continuation.resume(returning: success)
             }
         }
