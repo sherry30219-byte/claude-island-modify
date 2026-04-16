@@ -15,11 +15,34 @@
 
 ## 安裝
 
-下載最新版本或從原始碼建置：
+### 步驟一：下載專案
 
 ```bash
-xcodebuild -scheme ClaudeIsland -configuration Release build
+git clone https://github.com/你的帳號/claude-island-modify.git
+cd claude-island-modify
 ```
+
+### 步驟二：用 Xcode 開啟並設定簽名
+
+1. 雙擊 `ClaudeIsland.xcodeproj` 開啟 Xcode
+2. 左側選擇 **ClaudeIsland** target
+3. 進入 **Signing & Capabilities** 頁籤
+4. 將 **Team** 改為你自己的 Apple ID（沒有的話點 "Add an Account..." 登入）
+5. 將 **Bundle Identifier** 改為獨特的值，例如 `com.你的名字.ClaudeIsland`
+
+### 步驟三：建置並執行
+
+按 `⌘R` 即可建置並啟動應用程式。
+
+### 步驟四：開啟輔助使用權限
+
+首次啟動後，需要授予輔助使用（Accessibility）權限才能使用視窗切換功能：
+
+1. 打開 **系統設定 → 隱私權與安全性 → 輔助使用**
+2. 點擊 `+` 按鈕，加入剛建置的 Claude Island 應用程式
+3. 確認開關為開啟狀態
+
+> 也可以在靈動島設定選單中點擊 **Accessibility → Enable** 快速跳轉到設定頁面。
 
 ## 運作方式
 
