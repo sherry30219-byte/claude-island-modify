@@ -45,6 +45,7 @@ class NotchViewModel: ObservableObject {
     @Published var openReason: NotchOpenReason = .unknown
     @Published var contentType: NotchContentType = .instances
     @Published var isHovering: Bool = false
+    @Published var sessionCount: Int = 0
 
     // MARK: - Dependencies
 
@@ -83,9 +84,20 @@ class NotchViewModel: ObservableObject {
                     + claudeDirSelector.expandedPickerHeight
             )
         case .instances:
+            // Dynamic height: header + per-row height + padding
+            let rowHeight: CGFloat = 68
+            let headerHeight: CGFloat = deviceNotchRect.height
+            let verticalPadding: CGFloat = 24
+            let emptyStateHeight: CGFloat = 80
+            let count = max(sessionCount, 0)
+            let contentHeight = count == 0
+                ? emptyStateHeight
+                : rowHeight * CGFloat(count)
+            let totalHeight = headerHeight + contentHeight + verticalPadding
+            let maxHeight: CGFloat = 480
             return CGSize(
                 width: min(screenRect.width * 0.4, 480),
-                height: 320
+                height: min(totalHeight, maxHeight)
             )
         }
     }
@@ -171,14 +183,14 @@ class NotchViewModel: ObservableObject {
         hoverTimer?.cancel()
         hoverTimer = nil
 
-        // Start hover timer to auto-expand after 1 second
+        // Open immediately on hover
         if isHovering && (status == .closed || status == .popping) {
-            let workItem = DispatchWorkItem { [weak self] in
-                guard let self = self, self.isHovering else { return }
-                self.notchOpen(reason: .hover)
-            }
-            hoverTimer = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+            notchOpen(reason: .hover)
+        }
+
+        // Close when mouse leaves and was opened by hover (not click/notification)
+        if !isHovering && status == .opened && openReason == .hover && !isInChatMode {
+            notchClose()
         }
     }
 

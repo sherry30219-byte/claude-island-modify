@@ -111,6 +111,20 @@ enum ClaudePaths {
         return home.appendingPathComponent(".claude")
     }
 
+    /// Encode a working directory path to match Claude Code's project directory naming.
+    /// Replaces `/`, `.`, and non-ASCII characters with `-`.
+    static func encodeProjectDir(_ cwd: String) -> String {
+        var result = ""
+        for char in cwd {
+            if char == "/" || char == "." || !char.isASCII {
+                result += "-"
+            } else {
+                result += String(char)
+            }
+        }
+        return result
+    }
+
     private static func shellQuote(_ path: String) -> String {
         "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }

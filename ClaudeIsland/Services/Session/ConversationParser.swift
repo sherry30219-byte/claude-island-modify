@@ -38,6 +38,7 @@ struct ConversationInfo: Equatable {
     let lastMessageRole: String?  // "user", "assistant", or "tool"
     let lastToolName: String?  // Tool name if lastMessageRole is "tool"
     let firstUserMessage: String?  // Fallback title when no summary
+    let lastUserMessage: String?  // Most recent user message text
     let lastUserMessageDate: Date?  // Timestamp of last user message (for stable sorting)
     var usage: UsageInfo = UsageInfo()  // Token usage stats
 }
@@ -103,14 +104,14 @@ actor ConversationParser {
     /// Parse a JSONL file to extract conversation info
     /// Uses caching based on file modification time
     func parse(sessionId: String, cwd: String) -> ConversationInfo {
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
+        let projectDir = ClaudePaths.encodeProjectDir(cwd)
         let sessionFile = ClaudePaths.projectsDir.path + "/" + projectDir + "/" + sessionId + ".jsonl"
 
         let fileManager = FileManager.default
         guard fileManager.fileExists(atPath: sessionFile),
               let attrs = try? fileManager.attributesOfItem(atPath: sessionFile),
               let modDate = attrs[.modificationDate] as? Date else {
-            return ConversationInfo(summary: nil, lastMessage: nil, lastMessageRole: nil, lastToolName: nil, firstUserMessage: nil, lastUserMessageDate: nil)
+            return ConversationInfo(summary: nil, lastMessage: nil, lastMessageRole: nil, lastToolName: nil, firstUserMessage: nil, lastUserMessage: nil, lastUserMessageDate: nil)
         }
 
         if let cached = cache[sessionFile], cached.modificationDate == modDate {
@@ -119,7 +120,7 @@ actor ConversationParser {
 
         guard let data = fileManager.contents(atPath: sessionFile),
               let content = String(data: data, encoding: .utf8) else {
-            return ConversationInfo(summary: nil, lastMessage: nil, lastMessageRole: nil, lastToolName: nil, firstUserMessage: nil, lastUserMessageDate: nil)
+            return ConversationInfo(summary: nil, lastMessage: nil, lastMessageRole: nil, lastToolName: nil, firstUserMessage: nil, lastUserMessage: nil, lastUserMessageDate: nil)
         }
 
         let info = parseContent(content)
@@ -137,6 +138,7 @@ actor ConversationParser {
         var lastMessageRole: String?
         var lastToolName: String?
         var firstUserMessage: String?
+        var lastUserMessage: String?
         var lastUserMessageDate: Date?
         var usage = UsageInfo()
 
@@ -169,10 +171,11 @@ actor ConversationParser {
             let isMeta = json["isMeta"] as? Bool ?? false
 
             if type == "user" && !isMeta {
-                if let message = json["message"] as? [String: Any],
-                   let msgContent = message["content"] as? String {
-                    if !msgContent.hasPrefix("<command-name>") && !msgContent.hasPrefix("<local-command") && !msgContent.hasPrefix("Caveat:") {
-                        firstUserMessage = Self.truncateMessage(msgContent, maxLength: 50)
+                if let message = json["message"] as? [String: Any] {
+                    let msgContent = Self.extractUserMessageText(message)
+                    if let text = msgContent,
+                       !text.hasPrefix("<command-name>") && !text.hasPrefix("<local-command") && !text.hasPrefix("Caveat:") {
+                        firstUserMessage = Self.truncateMessage(text, maxLength: 50)
                         break
                     }
                 }
@@ -223,13 +226,14 @@ actor ConversationParser {
             if !foundLastUserMessage && type == "user" {
                 let isMeta = json["isMeta"] as? Bool ?? false
                 if !isMeta, let message = json["message"] as? [String: Any] {
-                    if let msgContent = message["content"] as? String {
-                        if !msgContent.hasPrefix("<command-name>") && !msgContent.hasPrefix("<local-command") && !msgContent.hasPrefix("Caveat:") {
-                            if let timestampStr = json["timestamp"] as? String {
-                                lastUserMessageDate = formatter.date(from: timestampStr)
-                            }
-                            foundLastUserMessage = true
+                    let msgContent = Self.extractUserMessageText(message)
+                    if let text = msgContent,
+                       !text.hasPrefix("<command-name>") && !text.hasPrefix("<local-command") && !text.hasPrefix("Caveat:") {
+                        lastUserMessage = Self.truncateMessage(text, maxLength: 60)
+                        if let timestampStr = json["timestamp"] as? String {
+                            lastUserMessageDate = formatter.date(from: timestampStr)
                         }
+                        foundLastUserMessage = true
                     }
                 }
             }
@@ -249,9 +253,28 @@ actor ConversationParser {
             lastMessageRole: lastMessageRole,
             lastToolName: lastToolName,
             firstUserMessage: firstUserMessage,
+            lastUserMessage: lastUserMessage,
             lastUserMessageDate: lastUserMessageDate,
             usage: usage
         )
+    }
+
+    /// Extract text from a user message (handles both string and array content formats)
+    private static func extractUserMessageText(_ message: [String: Any]) -> String? {
+        // String content
+        if let content = message["content"] as? String {
+            return content
+        }
+        // Array content (e.g. [{"type": "text", "text": "..."}])
+        if let contentArray = message["content"] as? [[String: Any]] {
+            for block in contentArray {
+                if block["type"] as? String == "text",
+                   let text = block["text"] as? String {
+                    return text
+                }
+            }
+        }
+        return nil
     }
 
     /// Format tool input for display in instance list
@@ -509,7 +532,7 @@ actor ConversationParser {
 
     /// Build session file path
     private static func sessionFilePath(sessionId: String, cwd: String) -> String {
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
+        let projectDir = ClaudePaths.encodeProjectDir(cwd)
         return ClaudePaths.projectsDir.path + "/" + projectDir + "/" + sessionId + ".jsonl"
     }
 
@@ -964,7 +987,7 @@ actor ConversationParser {
     func parseSubagentTools(sessionId: String, agentId: String, cwd: String) -> [SubagentToolInfo] {
         guard !agentId.isEmpty else { return [] }
 
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
+        let projectDir = ClaudePaths.encodeProjectDir(cwd)
         let agentFile = Self.subagentFilePath(sessionId: sessionId, agentId: agentId, projectDir: projectDir)
 
         guard FileManager.default.fileExists(atPath: agentFile),
@@ -1056,7 +1079,7 @@ extension ConversationParser {
     nonisolated static func parseSubagentToolsSync(sessionId: String, agentId: String, cwd: String) -> [SubagentToolInfo] {
         guard !agentId.isEmpty else { return [] }
 
-        let projectDir = cwd.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
+        let projectDir = ClaudePaths.encodeProjectDir(cwd)
         let agentFile = subagentFilePath(sessionId: sessionId, agentId: agentId, projectDir: projectDir)
 
         guard FileManager.default.fileExists(atPath: agentFile),

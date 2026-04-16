@@ -88,13 +88,39 @@ struct ClaudeInstancesView: View {
     // MARK: - Actions
 
     private func focusSession(_ session: SessionState) {
-        guard session.isInTmux else { return }
-
         Task {
-            if let pid = session.pid {
-                _ = await YabaiController.shared.focusWindow(forClaudePid: pid)
-            } else {
-                _ = await YabaiController.shared.focusWindow(forWorkingDirectory: session.cwd)
+            var focused = false
+
+            // Try yabai first if available and in tmux
+            if session.isInTmux, await WindowFinder.shared.isYabaiAvailable() {
+                if let pid = session.pid {
+                    focused = await YabaiController.shared.focusWindow(forClaudePid: pid)
+                } else {
+                    focused = await YabaiController.shared.focusWindow(forWorkingDirectory: session.cwd)
+                }
+            }
+
+            // Fall back to native macOS window activation
+            if !focused {
+                if let pid = session.pid {
+                    focused = await WindowFocuser.shared.focusTerminalNatively(
+                        forClaudePid: pid,
+                        projectName: session.projectName,
+                        cwd: session.cwd
+                    )
+                } else {
+                    focused = await WindowFocuser.shared.focusTerminalNatively(
+                        forWorkingDirectory: session.cwd,
+                        projectName: session.projectName
+                    )
+                }
+            }
+
+            // Close the notch after successfully focusing
+            if focused {
+                await MainActor.run {
+                    viewModel.notchClose()
+                }
             }
         }
     }
@@ -171,13 +197,13 @@ struct InstanceRow: View {
 
             // Text content
             VStack(alignment: .leading, spacing: 2) {
+                // Line 1: Project name + token usage
                 HStack(spacing: 6) {
-                    Text(session.displayTitle)
+                    Text(session.projectName)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                         .lineLimit(1)
 
-                    // Token usage indicator
                     if session.usage.totalTokens > 0 {
                         Text(session.usage.formattedTotal)
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
@@ -185,9 +211,21 @@ struct InstanceRow: View {
                     }
                 }
 
-                // Show tool call when waiting for approval, otherwise last activity
+                // Line 2: Last user question
+                if let userMsg = session.lastUserMessage {
+                    HStack(spacing: 4) {
+                        Text("You:")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text(userMsg)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.4))
+                            .lineLimit(1)
+                    }
+                }
+
+                // Line 3: Current status / tool
                 if isWaitingForApproval, let toolName = session.pendingToolName {
-                    // Show tool name in amber + input on same line
                     HStack(spacing: 4) {
                         Text(MCPToolFormatter.formatToolName(toolName))
                             .font(.system(size: 11, weight: .medium, design: .monospaced))
@@ -207,7 +245,6 @@ struct InstanceRow: View {
                 } else if let role = session.lastMessageRole {
                     switch role {
                     case "tool":
-                        // Tool call - show tool name + input
                         HStack(spacing: 4) {
                             if let toolName = session.lastToolName {
                                 Text(MCPToolFormatter.formatToolName(toolName))
@@ -222,20 +259,11 @@ struct InstanceRow: View {
                             }
                         }
                     case "user":
-                        // User message - prefix with "You:"
-                        HStack(spacing: 4) {
-                            Text("You:")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.white.opacity(0.5))
-                            if let msg = session.lastMessage {
-                                Text(msg)
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.white.opacity(0.4))
-                                    .lineLimit(1)
-                            }
-                        }
+                        Text(phaseStatusText)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.4))
+                            .lineLimit(1)
                     default:
-                        // Assistant message - just show text
                         if let msg = session.lastMessage {
                             Text(msg)
                                 .font(.system(size: 11))
@@ -243,13 +271,7 @@ struct InstanceRow: View {
                                 .lineLimit(1)
                         }
                     }
-                } else if let lastMsg = session.lastMessage {
-                    Text(lastMsg)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.4))
-                        .lineLimit(1)
                 } else {
-                    // Fallback: show phase-based status when no other content
                     Text(phaseStatusText)
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.4))
@@ -313,6 +335,9 @@ struct InstanceRow: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
             onChat()
+        }
+        .onTapGesture(count: 1) {
+            onFocus()
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isWaitingForApproval)
         .background(

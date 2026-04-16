@@ -77,7 +77,7 @@ struct SessionState: Equatable, Identifiable, Sendable {
         subagentState: SubagentState = SubagentState(),
         conversationInfo: ConversationInfo = ConversationInfo(
             summary: nil, lastMessage: nil, lastMessageRole: nil,
-            lastToolName: nil, firstUserMessage: nil, lastUserMessageDate: nil
+            lastToolName: nil, firstUserMessage: nil, lastUserMessage: nil, lastUserMessageDate: nil
         ),
         needsClearReconciliation: Bool = false,
         lastActivity: Date = Date(),
@@ -172,6 +172,11 @@ struct SessionState: Equatable, Identifiable, Sendable {
     /// First user message
     var firstUserMessage: String? {
         conversationInfo.firstUserMessage
+    }
+
+    /// Last user message text
+    var lastUserMessage: String? {
+        conversationInfo.lastUserMessage
     }
 
     /// Last user message date
