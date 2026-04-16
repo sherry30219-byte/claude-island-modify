@@ -28,8 +28,13 @@
 
 1. 下載 `.dmg` 檔案
 2. 打開 DMG，將 **Claude Island** 拖到 **Applications** 資料夾
-3. 首次打開時 macOS 會阻擋，請**右鍵 → 打開**，或到 **系統設定 → 隱私權與安全性** 點擊「仍要打開」
-4. 開啟**輔助使用權限**：系統設定 → 隱私權與安全性 → 輔助使用 → 加入 Claude Island 並開啟
+3. **首次打開會被 macOS 阻擋**（因為此版本沒有 Apple Developer 簽名，加入 Apple Developer Program 一年要 $99 USD，所以沒有簽），請依照以下方式解除：
+   - **方式 A**：打開終端機，輸入以下指令後即可正常打開：
+     ```bash
+     xattr -cr /Applications/Claude\ Island.app
+     ```
+   - **方式 B**：到 **系統設定 → 隱私權與安全性**，往下滑找到「已阻擋 Claude Island」，點擊 **仍要打開**
+4. 開啟**輔助使用權限**（視窗切換功能需要）：系統設定 → 隱私權與安全性 → 輔助使用 → 加入 Claude Island 並開啟
 
 ### 方法二：從原始碼建置
 
